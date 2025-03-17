@@ -1,0 +1,122 @@
+---
+ - name: Ansible client playbook
+   hosts: client
+   become: true
+   tasks:
+    #- name: Update and upgrade apt packages
+    #  apt:
+    #        upgrade: yes
+    #        update_cache: yes
+
+    - name: Install apt packages
+      apt:
+        name:
+          - debconf
+          - debconf-utils
+          - console-data
+        state: latest
+
+    - name: Install pip
+      become: true
+      ansible.builtin.apt:
+            name: python3-pip
+            state: latest
+
+    - name: Install passlib
+      become: true
+      ansible.builtin.apt:
+            name: python3-passlib
+
+    - name: Ansible install git
+      apt:
+            name: git
+            state: latest
+
+    - name: set spanish as locale
+      locale_gen:
+            name: es_ES
+            state: present
+
+    - name: set spanish as default locale
+      command: localectl set-locale LANG=es_ES.UTF-8
+
+    - name:   Set default locale to es_ES.UTF-8
+      debconf:
+        name: locales
+        question: locales/default_environment_locale
+        value: es_ES.UTF-8
+        vtype: select
+
+    - name: reconfigure-keyboard-model
+      debconf:
+        name: keyboard-configuration
+        question: keyboard-configuration/model
+        value: Generic 105-key PC
+        vtype: select
+
+    - name: reconfigure-keyboard-layout
+      debconf:
+        name: keyboard-configuration
+        question: keyboard-configuration/layout
+        value: Spanish
+        vtype: select
+
+    - name: reconfigure-keyboard-layoutcode
+      debconf:
+        name: keyboard-configuration
+        question: keyboard-configuration/layoutcode
+        value: es
+        vtype: string
+
+    - name: reconfigure-keyboard-variant
+      debconf:
+        name: keyboard-configuration
+        question: keyboard-configuration/variant
+        value: Spanish
+        vtype: string
+
+    #- name: change keyboard 
+    #  command: L='es' && sudo sed -i 's/XKBLAYOUT=\"\w*"/XKBLAYOUT=\"'$L'\"/g' /etc/default/keyboard
+
+    #- name: set as default x11-keymap Ubuntu
+    #  command: localectl set-keymap es
+
+    - name: loadkeys es
+      command: loadkeys es
+
+    - name: Modify /etc/vconsole.conf with KEYMAP=es
+      lineinfile:
+        path: /etc/vconsole.conf
+        regexp: '^KEYMAP='
+        line: 'KEYMAP="es"'
+        create: true
+
+    - name: Modify /etc/vconsole.conf with XKBLAYOUT=es
+      lineinfile:
+        path: /etc/vconsole.conf
+        regexp: '^XKBLAYOUT='
+        line: 'XKBLAYOUT="es"'
+        create: true
+        
+
+    - name: create user usuarioCliente
+      user:
+            name: usuarioCliente
+            shell: /bin/bash
+            create_home: yes
+            state: present
+            groups: sudo
+            password: "{{ 'cliente' | password_hash('sha512') }}"
+
+    - name: create user otroCliente
+      user:
+            name: otroCliente
+            shell: /bin/bash
+            create_home: yes
+            state: present
+            groups: sudo
+            password: "{{ 'otro' | password_hash('sha512') }}"
+
+    - name: reboot
+      command: reboot
+...

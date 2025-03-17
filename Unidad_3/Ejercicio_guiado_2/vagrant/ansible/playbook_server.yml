@@ -1,0 +1,34 @@
+---
+ - name: Ansible server playbook
+   hosts: server
+   become: true
+   tasks:
+    
+
+    - name: Ansible install git
+      apt:
+            name: git
+            state: latest
+
+    - name: loadkeys es
+      command: loadkeys es
+
+    - name: Modify /etc/vconsole.conf with KEYMAP=es
+      lineinfile:
+        path: /etc/vconsole.conf
+        regexp: '^KEYMAP='
+        line: 'KEYMAP="es"'
+        create: true
+
+    - name: Modify /etc/vconsole.conf with XKBLAYOUT=es
+      lineinfile:
+        path: /etc/vconsole.conf
+        regexp: '^XKBLAYOUT='
+        line: 'XKBLAYOUT="es"'
+        create: true
+
+    - name: Ansible install telnetd
+      apt:
+            name: telnetd
+            state: latest
+...

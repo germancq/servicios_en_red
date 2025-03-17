@@ -1,0 +1,61 @@
+---
+ - name: Ansible client playbook
+   hosts: client
+   become: true
+   tasks:
+    - name: Update and upgrade apt packages
+      apt:
+            upgrade: no
+            update_cache: yes
+
+    - name: Ansible install git
+      apt:
+            name: git
+            state: latest
+
+    - name: Install pip
+      become: true
+      ansible.builtin.apt:
+            name: python3-pip
+            state: latest
+
+    - name: Install passlib
+      become: true
+      ansible.builtin.apt:
+            name: python3-passlib
+
+    - name: loadkeys es
+      command: loadkeys es
+
+    - name: Modify /etc/vconsole.conf with KEYMAP=es
+      lineinfile:
+        path: /etc/vconsole.conf
+        regexp: '^KEYMAP='
+        line: 'KEYMAP="es"'
+        create: true
+
+    - name: Modify /etc/vconsole.conf with XKBLAYOUT=es
+      lineinfile:
+        path: /etc/vconsole.conf
+        regexp: '^XKBLAYOUT='
+        line: 'XKBLAYOUT="es"'
+        create: true
+
+    - name: create user usuarioCliente
+      user:
+            name: usuarioCliente
+            shell: /bin/bash
+            create_home: yes
+            state: present
+            groups: sudo
+            password: "{{ 'cliente' | password_hash('sha512') }}"
+
+    - name: create user otroCliente
+      user:
+            name: otroCliente
+            shell: /bin/bash
+            create_home: yes
+            state: present
+            groups: sudo
+            password: "{{ 'otro' | password_hash('sha512') }}"
+...
